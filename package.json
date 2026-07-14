@@ -1,0 +1,32 @@
+{
+  "name": "agentmesh",
+  "version": "1.0.0",
+  "description": "AgentMesh — a network of x402-paywalled AI worker agents on Celo, coordinated by a paying orchestrator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "worker:research": "node src/workers/research.js",
+    "orchestrate": "node src/orchestrator/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plutodev1/agentmesh.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/plutodev1/agentmesh/issues"
+  },
+  "homepage": "https://github.com/plutodev1/agentmesh#readme",
+  "dependencies": {
+    "@x402/core": "^2.18.0",
+    "@x402/evm": "^2.18.0",
+    "@x402/express": "^2.18.0",
+    "@x402/fetch": "^2.18.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "viem": "^2.55.1"
+  },
+  "type": "module"
+}
