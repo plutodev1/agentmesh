@@ -40,7 +40,7 @@ npm run orchestrate "history of mobile money in Nigeria"   # terminal 2
 
 - [x] Day 1 — registration, attribution tag, wallets, first worker +
       orchestrator, payment pipeline verified against the live facilitator
-- [ ] Remaining workers (copywriting, translation, image, fact-check)
+- [x] All five workers (research, copywriting, translation, image, fact-check)
 - [ ] Full pipeline job on mainnet
 - [ ] Daily production mode (scheduled real content jobs)
 - [x] Live demo dashboard with real-time payment feed (`npm run dashboard`)
