@@ -3,7 +3,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runJob } from "../orchestrator/index.js";
-import { ATTRIBUTION_TAG, PAYTO_ADDRESS } from "../lib/config.js";
+import { ATTRIBUTION_TAG, PAYTO_ADDRESS, PRICES, usdc } from "../lib/config.js";
 
 const PORT = process.env.DASHBOARD_PORT || 4000;
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -47,8 +47,9 @@ app.post("/api/jobs", async (req, res) => {
   }
 });
 
+const pricesUsdc = Object.fromEntries(Object.entries(PRICES).map(([k, v]) => [k, usdc(v)]));
 app.get("/api/info", (_req, res) =>
-  res.json({ attributionTag: ATTRIBUTION_TAG, payTo: PAYTO_ADDRESS, network: "Celo mainnet" }),
+  res.json({ attributionTag: ATTRIBUTION_TAG, payTo: PAYTO_ADDRESS, network: "Celo mainnet", prices: pricesUsdc, freeMode: process.env.FREE_MODE === "1" }),
 );
 
 app.listen(PORT, () => {

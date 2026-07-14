@@ -5,99 +5,255 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AgentMesh — live agent payments on Celo</title>
 <style>
-  :root { --bg:#0b2318; --panel:#123024; --ink:#eef7f0; --dim:#9db8a8; --accent:#E07B39; --ok:#7dd6a0; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:#0b2318; color:#eef7f0; font-family: Verdana, system-ui, sans-serif; }
-  header { padding:28px 32px 8px; }
-  h1 { font-family: Georgia, serif; font-size:32px; margin:0 0 6px; }
-  h1 em { color:#E07B39; font-style:normal; }
-  .sub { color:#9db8a8; font-size:14px; }
-  main { display:grid; grid-template-columns: 1fr 1fr; gap:20px; padding:20px 32px 40px; }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
-  .panel { background:#123024; border:1px solid #1f4a36; border-radius:12px; padding:20px; }
-  .panel h2 { font-size:15px; letter-spacing:2px; color:#E07B39; margin:0 0 14px; text-transform:uppercase; }
-  form { display:flex; gap:10px; }
-  input[type=text] { flex:1; padding:12px 14px; border-radius:8px; border:1px solid #2b5a42; background:#0e281c; color:#eef7f0; font-size:15px; }
-  button { padding:12px 22px; border:none; border-radius:8px; background:#E07B39; color:#fff; font-weight:700; font-size:15px; cursor:pointer; }
-  button:disabled { opacity:.5; cursor:wait; }
-  #feed { list-style:none; margin:0; padding:0; max-height:420px; overflow-y:auto; font-size:14px; }
-  #feed li { padding:8px 10px; border-bottom:1px solid #1b3f2e; display:flex; gap:8px; align-items:baseline; }
-  #feed .t { color:#6f8f7e; font-size:11px; min-width:62px; }
-  .tag { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
-  .tag.pay { background:#3a2410; color:#ffb877; }
-  .tag.work { background:#16381f; color:#7dd6a0; }
-  .tag.err { background:#43181a; color:#ff9f9f; }
-  a { color:#ffb877; }
-  #result { display:none; }
-  #result.show { display:block; }
-  pre, .post { white-space:pre-wrap; background:#0e281c; border-radius:8px; padding:14px; font-size:14px; line-height:1.55; }
-  #cardwrap svg { width:100%; max-width:380px; height:auto; border-radius:8px; }
-  .meta { color:#9db8a8; font-size:12px; margin-top:10px; }
+  :root {
+    --page:#0d1512; --surface:#142a1f; --surface-2:#0f2018;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --hairline:rgba(255,255,255,0.10); --accent:#E07B39;
+    --good:#0ca30c;
+    --c-research:#3987e5; --c-copywriting:#199e70; --c-factcheck:#c98500;
+    --c-translation:#9085e9; --c-image:#d55181;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink);
+         font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size:15px; line-height:1.5; }
+  .wrap { max-width:1180px; margin:0 auto; padding:28px 24px 60px; }
+
+  header { display:flex; flex-wrap:wrap; align-items:baseline; gap:10px 18px; margin-bottom:6px; }
+  header h1 { font-size:26px; font-weight:700; margin:0; letter-spacing:-.02em; }
+  header h1 span { color:var(--accent); }
+  .chip { font-size:12px; color:var(--ink-2); background:var(--surface); border:1px solid var(--hairline);
+          border-radius:20px; padding:3px 12px; }
+  .lede { color:var(--ink-2); max-width:760px; margin:4px 0 24px; }
+  .lede b { color:var(--ink); font-weight:600; }
+
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+  .tile { background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:16px 18px; }
+  .tile .label { font-size:13px; color:var(--muted); }
+  .tile .value { font-size:34px; font-weight:600; margin-top:2px; }
+  .tile .note { font-size:12px; color:var(--muted); margin-top:2px; }
+
+  .team { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:14px; }
+  .agent { background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:14px 14px 12px; }
+  .agent .name { font-weight:600; display:flex; align-items:center; gap:8px; }
+  .agent .dot { width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 2px var(--surface); }
+  .agent .role { font-size:12px; color:var(--ink-2); margin:4px 0 10px; min-height:34px; }
+  .agent .state { font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
+  .agent .price { color:var(--ink-2); }
+  .agent .status { font-weight:600; }
+  .agent.working { border-color:var(--accent); }
+  .agent.working .status { color:var(--accent); }
+  .agent.done .status { color:var(--good); }
+
+  .cols { display:grid; grid-template-columns: 5fr 6fr; gap:14px; align-items:start; }
+  .panel { background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:20px; }
+  .panel h2 { font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 14px; }
+
+  form { display:flex; gap:10px; margin-bottom:6px; }
+  input[type=text] { flex:1; padding:12px 14px; border-radius:9px; border:1px solid var(--hairline);
+                     background:var(--surface-2); color:var(--ink); font-size:15px; }
+  input[type=text]::placeholder { color:var(--muted); }
+  input[type=text]:focus { outline:2px solid var(--accent); outline-offset:-1px; }
+  button { padding:12px 20px; border:none; border-radius:9px; background:var(--accent); color:#fff;
+           font-weight:700; font-size:15px; cursor:pointer; }
+  button:disabled { opacity:.55; cursor:wait; }
+  .hint { font-size:12px; color:var(--muted); margin:0 0 16px; }
+
+  #feed { list-style:none; margin:0; padding:0; max-height:430px; overflow-y:auto; }
+  #feed li { padding:9px 2px; border-bottom:1px solid var(--hairline); display:flex; gap:10px; align-items:baseline; font-size:14px; }
+  #feed li:last-child { border-bottom:none; }
+  #feed .t { color:var(--muted); font-size:11px; min-width:58px; font-variant-numeric:tabular-nums; }
+  #feed .who { display:inline-flex; align-items:center; gap:6px; color:var(--ink-2); }
+  #feed .who .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  #feed .msg { color:var(--ink-2); }
+  #feed .msg b { color:var(--ink); font-weight:600; }
+  #feed .paid { color:var(--good); font-weight:600; }
+  #feed .err { color:#ec835a; }
+  #feed a { color:var(--accent); }
+  .empty { color:var(--muted); font-size:14px; padding:14px 2px; }
+
+  #result .placeholder { color:var(--muted); font-size:14px; }
+  .content-grid { display:grid; grid-template-columns: 200px 1fr; gap:18px; }
+  #cardwrap svg { width:100%; height:auto; border-radius:10px; border:1px solid var(--hairline); }
+  h3 { font-size:13px; color:var(--muted); font-weight:600; margin:0 0 6px; letter-spacing:.08em; text-transform:uppercase; }
+  .post { white-space:pre-wrap; background:var(--surface-2); border-radius:9px; padding:14px 16px; font-size:14px; margin-bottom:14px; }
+  .meta { color:var(--muted); font-size:12px; }
+  .meta a { color:var(--ink-2); }
+  .badge-pass { color:var(--good); font-weight:600; }
+
+  footer { margin-top:26px; color:var(--muted); font-size:12px; display:flex; flex-wrap:wrap; gap:8px 22px; }
+  footer a { color:var(--ink-2); }
+  #modebar { display:none; margin:0 0 14px; padding:10px 14px; border-radius:9px; background:#3a2410; color:#ffb877; font-size:13px; }
+
+  @media (max-width: 980px) { .cols { grid-template-columns:1fr; } .team { grid-template-columns:repeat(2,1fr); } .tiles { grid-template-columns:1fr; } .content-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>Agent<em>Mesh</em></h1>
-  <div class="sub">One orchestrator hires five specialist AI agents — every hire is a real x402 stablecoin payment settled on Celo mainnet. Tag: <span id="tag"></span> · payTo: <span id="payto"></span></div>
-</header>
-<main>
-  <section class="panel">
-    <h2>Start a job</h2>
-    <form id="jobform">
-      <input type="text" id="topic" placeholder="e.g. How stablecoins protect savings from inflation" required>
-      <button id="go" type="submit">Hire agents</button>
-    </form>
-    <h2 style="margin-top:24px">Live payment feed</h2>
-    <ul id="feed"></ul>
-  </section>
-  <section class="panel" id="result">
-    <h2>Finished content</h2>
-    <div id="cardwrap"></div>
-    <h3>English</h3><div class="post" id="english"></div>
-    <h3>Nigerian Pidgin</h3><div class="post" id="pidgin"></div>
-    <div class="meta" id="meta"></div>
-  </section>
-</main>
+<div class="wrap">
+  <header>
+    <h1>Agent<span>Mesh</span></h1>
+    <span class="chip">Celo mainnet</span>
+    <span class="chip" id="tagchip">tag: …</span>
+  </header>
+  <p class="lede">A manager AI hires five specialist AI agents to produce Web3 education content for
+    <b>ChainConnect NG</b> — and pays each one per task with a real <b>x402 stablecoin payment</b>.
+    No accounts, no subscriptions: every hire below settles as USDC on the Celo blockchain.</p>
+
+  <div id="modebar"></div>
+
+  <div class="tiles">
+    <div class="tile"><div class="label">x402 payments settled</div><div class="value" id="stat-payments">0</div><div class="note">this session</div></div>
+    <div class="tile"><div class="label">Paid to agents</div><div class="value" id="stat-usdc">$0.00</div><div class="note">USDC on Celo</div></div>
+    <div class="tile"><div class="label">Jobs completed</div><div class="value" id="stat-jobs">0</div><div class="note">each job = 5 paid hires</div></div>
+  </div>
+
+  <div class="team" id="team"></div>
+
+  <div class="cols">
+    <section class="panel">
+      <h2>Start a job</h2>
+      <form id="jobform">
+        <input type="text" id="topic" placeholder="Give the team a topic…" required>
+        <button id="go" type="submit">Hire the team</button>
+      </form>
+      <p class="hint">Try: “How stablecoins protect savings from inflation” — the manager takes it from there.</p>
+      <h2>Live activity</h2>
+      <ul id="feed"></ul>
+      <div class="empty" id="feedempty">Nothing yet — start a job to watch the agents get hired and paid in real time.</div>
+    </section>
+
+    <section class="panel" id="result">
+      <h2>Finished content</h2>
+      <div class="placeholder" id="placeholder">The finished post (English + Nigerian Pidgin) and its shareable
+        graphic will appear here when the team delivers.</div>
+      <div id="delivered" style="display:none">
+        <div class="content-grid">
+          <div id="cardwrap"></div>
+          <div>
+            <h3>English post</h3><div class="post" id="english"></div>
+            <h3>Nigerian Pidgin</h3><div class="post" id="pidgin"></div>
+            <div class="meta" id="meta"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Attribution tag <b id="ftag"></b></span>
+    <span>Agent wallet <b id="fpayto"></b></span>
+    <span><a href="https://dune.com/celo/agentic-payments-defai-hackathon" target="_blank">Hackathon leaderboard</a></span>
+    <span><a href="https://github.com/plutodev1/agentmesh" target="_blank">Source on GitHub</a></span>
+  </footer>
+</div>
+
 <script>
-const feed = document.getElementById('feed');
-function row(html, cls) {
-  const li = document.createElement('li');
-  li.innerHTML = html;
-  feed.prepend(li);
+const AGENTS = [
+  { id:'research',    name:'Research',    role:'Pulls sourced facts on the topic' },
+  { id:'copywriting', name:'Copywriter',  role:'Drafts the educational post' },
+  { id:'factcheck',   name:'Fact-checker',role:'Verifies every claim against sources' },
+  { id:'translation', name:'Translator',  role:'English → Nigerian Pidgin' },
+  { id:'image',       name:'Designer',    role:'Makes the shareable graphic' },
+];
+const team = document.getElementById('team');
+for (const a of AGENTS) {
+  team.insertAdjacentHTML('beforeend', `
+    <div class="agent" id="agent-${a.id}">
+      <div class="name"><span class="dot" style="background:var(--c-${a.id})"></span>${a.name}</div>
+      <div class="role">${a.role}</div>
+      <div class="state"><span class="price" id="price-${a.id}"></span><span class="status" id="status-${a.id}">idle</span></div>
+    </div>`);
 }
-const fmt = (iso) => new Date(iso).toLocaleTimeString();
+function setAgent(id, cls, text) {
+  const el = document.getElementById('agent-' + id);
+  if (!el) return;
+  el.classList.remove('working','done');
+  if (cls) el.classList.add(cls);
+  document.getElementById('status-' + id).textContent = text;
+}
+function resetAgents(){ for (const a of AGENTS) setAgent(a.id, null, 'idle'); }
+
+const stats = { payments:0, usdc:0, jobs:0 };
+function renderStats() {
+  document.getElementById('stat-payments').textContent = stats.payments;
+  document.getElementById('stat-usdc').textContent = '$' + stats.usdc.toFixed(2);
+  document.getElementById('stat-jobs').textContent = stats.jobs;
+}
+
+const feed = document.getElementById('feed');
+const fmt = iso => new Date(iso).toLocaleTimeString([], {hour12:false});
+function row(iso, html) {
+  document.getElementById('feedempty').style.display = 'none';
+  feed.insertAdjacentHTML('afterbegin', `<li><span class="t">${fmt(iso)}</span>${html}</li>`);
+}
+const who = id => `<span class="who"><span class="dot" style="background:var(--c-${id})"></span>${(AGENTS.find(a=>a.id===id)||{name:id}).name}</span>`;
+
 fetch('/api/info').then(r=>r.json()).then(i=>{
-  document.getElementById('tag').textContent = i.attributionTag;
-  document.getElementById('payto').textContent = i.payTo.slice(0,10)+'…';
+  document.getElementById('tagchip').textContent = 'tag: ' + i.attributionTag;
+  document.getElementById('ftag').textContent = i.attributionTag;
+  document.getElementById('fpayto').textContent = i.payTo.slice(0,8) + '…' + i.payTo.slice(-4);
+  for (const [k,v] of Object.entries(i.prices)) {
+    const el = document.getElementById('price-' + k);
+    if (el) el.textContent = '$' + v.toFixed(3) + '/task';
+  }
+  if (i.freeMode) {
+    const bar = document.getElementById('modebar');
+    bar.style.display = 'block';
+    bar.textContent = 'Practice mode — the paywall is off, so no real payments settle in this run.';
+  }
 });
+
 const es = new EventSource('/api/stream');
 es.onmessage = (m) => {
   const e = JSON.parse(m.data);
-  const t = `<span class="t">${fmt(e.at)}</span>`;
-  if (e.type === 'job_start') row(`${t}<span class="tag work">JOB</span> "${e.topic}"`);
-  else if (e.type === 'hiring') row(`${t}<span class="tag work">HIRE</span> ${e.worker} agent`);
-  else if (e.type === 'payment') {
-    const link = e.tx ? ` — <a target="_blank" href="https://celoscan.io/tx/${e.tx}">view on Celoscan</a>` : '';
-    row(`${t}<span class="tag pay">PAID</span> ${e.worker}${link}`);
-  }
-  else if (e.type === 'done') row(`${t}<span class="tag work">DONE</span> ${e.worker} (${e.seconds.toFixed(1)}s)`);
-  else if (e.type === 'job_error') row(`${t}<span class="tag err">ERROR</span> ${e.error}`);
-  else if (e.type === 'job_complete') { row(`${t}<span class="tag pay">SETTLED</span> ${e.payments} x402 payments`); document.getElementById('go').disabled = false; }
-  else if (e.type === 'result') {
-    document.getElementById('result').classList.add('show');
-    document.getElementById('cardwrap').innerHTML = e.svg;
-    document.getElementById('english').textContent = e.english;
-    document.getElementById('pidgin').textContent = e.pidgin;
-    document.getElementById('meta').textContent = `fact-check: ${e.factcheck.verdict} · sources: ${e.sources.join('  ')}`;
+  switch (e.type) {
+    case 'job_start':
+      resetAgents();
+      row(e.at, `<span class="msg">New job: <b>“${e.topic}”</b></span>`);
+      break;
+    case 'hiring':
+      setAgent(e.worker, 'working', 'working…');
+      row(e.at, `<span class="msg">${who(e.worker)} hired</span>`);
+      break;
+    case 'payment': {
+      stats.payments++; stats.usdc += e.amountUsdc ?? 0; renderStats();
+      const link = e.tx ? ` — <a target="_blank" href="https://celoscan.io/tx/${e.tx}">proof on Celoscan</a>` : '';
+      row(e.at, `<span class="msg">${who(e.worker)} <span class="paid">paid $${(e.amountUsdc ?? 0).toFixed(3)} USDC</span>${link}</span>`);
+      break;
+    }
+    case 'done':
+      setAgent(e.worker, 'done', 'delivered ✓');
+      row(e.at, `<span class="msg">${who(e.worker)} delivered (${e.seconds.toFixed(1)}s)</span>`);
+      break;
+    case 'job_complete':
+      stats.jobs++; renderStats();
+      row(e.at, `<span class="msg"><b>Job complete</b> — ${e.payments} payments settled</span>`);
+      document.getElementById('go').disabled = false;
+      break;
+    case 'job_error':
+      resetAgents();
+      row(e.at, `<span class="msg err">Problem: ${e.error}</span>`);
+      document.getElementById('go').disabled = false;
+      break;
+    case 'result':
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('delivered').style.display = 'block';
+      document.getElementById('cardwrap').innerHTML = e.svg;
+      document.getElementById('english').textContent = e.english;
+      document.getElementById('pidgin').textContent = e.pidgin;
+      document.getElementById('meta').innerHTML =
+        `Fact-check: <span class="badge-pass">${e.factcheck.verdict}</span> · Sources: ` +
+        e.sources.map(s=>`<a href="${s}" target="_blank">${new URL(s).pathname.split('/').pop().replaceAll('_',' ')}</a>`).join(' · ');
+      break;
   }
 };
+
 document.getElementById('jobform').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const topic = document.getElementById('topic').value.trim();
   if (!topic) return;
   document.getElementById('go').disabled = true;
   const r = await fetch('/api/jobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ topic }) });
-  if (!r.ok) { document.getElementById('go').disabled = false; }
+  if (!r.ok) document.getElementById('go').disabled = false;
 });
 </script>
 </body>

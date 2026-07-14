@@ -14,10 +14,22 @@ const app = createWorkerApp({
   ],
 });
 
+// Wikipedia fetches occasionally flake (transient DNS/socket errors) — retry.
+async function fetchRetry(url, options, tries = 3) {
+  for (let i = 1; ; i++) {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      if (i >= tries) throw err;
+      await new Promise((r) => setTimeout(r, 500 * i));
+    }
+  }
+}
+
 // Real facts from the Wikipedia API — genuine utility per paid call.
 async function research(topic) {
   const headers = { "User-Agent": "AgentMesh/0.1 (hackathon research agent)" };
-  const search = await fetch(
+  const search = await fetchRetry(
     "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" +
       encodeURIComponent(topic) +
       "&srlimit=3&format=json&origin=*",
@@ -27,7 +39,7 @@ async function research(topic) {
 
   const pages = [];
   for (const r of results) {
-    const s = await fetch(
+    const s = await fetchRetry(
       "https://en.wikipedia.org/api/rest_v1/page/summary/" +
         encodeURIComponent(r.title),
       { headers },

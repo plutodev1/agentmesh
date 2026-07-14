@@ -1,4 +1,12 @@
 import "dotenv/config";
+import dns from "node:dns";
+import net from "node:net";
+
+// This machine resolves IPv6 addresses it can't actually reach, which makes
+// Node's fetch time out (curl falls back to IPv4 automatically). Force IPv4:
+// both the DNS ordering and connection auto-selection must be set.
+dns.setDefaultResultOrder("ipv4first");
+net.setDefaultAutoSelectFamily(false);
 
 // Celo mainnet — the only network the Celo x402 facilitator supports.
 export const NETWORK = "eip155:42220";
@@ -20,6 +28,17 @@ export const ATTRIBUTION_TAG = "celo_266a6aa0aec8";
 
 // Where worker earnings land (registered as agentWalletAddress on the submission).
 export const PAYTO_ADDRESS = process.env.PAYTO_ADDRESS;
+
+// Price per call for each worker, in USDC base units (6 decimals).
+export const PRICES = {
+  research: 10_000,
+  copywriting: 20_000,
+  factcheck: 15_000,
+  translation: 10_000,
+  image: 10_000,
+};
+
+export const usdc = (baseUnits) => baseUnits / 1_000_000;
 
 // AssetAmount shape @x402/evm expects: asset as plain address, EIP-712
 // signing domain in `extra` (the paying client reads extra.name/version).

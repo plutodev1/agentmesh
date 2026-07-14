@@ -4,7 +4,7 @@ import path from "node:path";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
-import { NETWORK } from "../lib/config.js";
+import { NETWORK, PRICES, usdc } from "../lib/config.js";
 
 const account = privateKeyToAccount(process.env.ORCHESTRATOR_PRIVATE_KEY);
 const paidFetch =
@@ -32,8 +32,8 @@ async function hire(ctx, name, url, options = {}) {
   const receiptHeader = res.headers.get("x-payment-response");
   if (receiptHeader) {
     const receipt = JSON.parse(Buffer.from(receiptHeader, "base64").toString("utf8"));
-    ctx.receipts.push({ worker: name, ...receipt });
-    ctx.emit({ type: "payment", worker: name, tx: receipt.transaction ?? null, receipt });
+    ctx.receipts.push({ worker: name, amountUsdc: usdc(PRICES[name] ?? 0), ...receipt });
+    ctx.emit({ type: "payment", worker: name, amountUsdc: usdc(PRICES[name] ?? 0), tx: receipt.transaction ?? null, receipt });
   }
   if (!res.ok) {
     throw new Error(`${name} failed: ${res.status} ${await res.text()}`);
