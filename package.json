@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "worker:research": "node src/workers/research.js",
-    "orchestrate": "node src/orchestrator/index.js"
+    "orchestrate": "node src/orchestrator/index.js",
+    "workers": "node src/workers/all.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/plutodev1/agentmesh#readme",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "@x402/core": "^2.18.0",
     "@x402/evm": "^2.18.0",
     "@x402/express": "^2.18.0",
