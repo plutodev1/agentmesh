@@ -43,5 +43,5 @@ npm run orchestrate "history of mobile money in Nigeria"   # terminal 2
 - [ ] Remaining workers (copywriting, translation, image, fact-check)
 - [ ] Full pipeline job on mainnet
 - [ ] Daily production mode (scheduled real content jobs)
-- [ ] Live demo dashboard with real-time payment feed
+- [x] Live demo dashboard with real-time payment feed (`npm run dashboard`)
 - [ ] ERC-8004 on-chain agent identity

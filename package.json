@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "worker:research": "node src/workers/research.js",
     "orchestrate": "node src/orchestrator/index.js",
-    "workers": "node src/workers/all.js"
+    "workers": "node src/workers/all.js",
+    "dashboard": "node src/dashboard/server.js"
   },
   "repository": {
     "type": "git",

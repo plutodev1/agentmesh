@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentMesh — live agent payments on Celo</title>
+<style>
+  :root { --bg:#0b2318; --panel:#123024; --ink:#eef7f0; --dim:#9db8a8; --accent:#E07B39; --ok:#7dd6a0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#0b2318; color:#eef7f0; font-family: Verdana, system-ui, sans-serif; }
+  header { padding:28px 32px 8px; }
+  h1 { font-family: Georgia, serif; font-size:32px; margin:0 0 6px; }
+  h1 em { color:#E07B39; font-style:normal; }
+  .sub { color:#9db8a8; font-size:14px; }
+  main { display:grid; grid-template-columns: 1fr 1fr; gap:20px; padding:20px 32px 40px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel { background:#123024; border:1px solid #1f4a36; border-radius:12px; padding:20px; }
+  .panel h2 { font-size:15px; letter-spacing:2px; color:#E07B39; margin:0 0 14px; text-transform:uppercase; }
+  form { display:flex; gap:10px; }
+  input[type=text] { flex:1; padding:12px 14px; border-radius:8px; border:1px solid #2b5a42; background:#0e281c; color:#eef7f0; font-size:15px; }
+  button { padding:12px 22px; border:none; border-radius:8px; background:#E07B39; color:#fff; font-weight:700; font-size:15px; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:wait; }
+  #feed { list-style:none; margin:0; padding:0; max-height:420px; overflow-y:auto; font-size:14px; }
+  #feed li { padding:8px 10px; border-bottom:1px solid #1b3f2e; display:flex; gap:8px; align-items:baseline; }
+  #feed .t { color:#6f8f7e; font-size:11px; min-width:62px; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+  .tag.pay { background:#3a2410; color:#ffb877; }
+  .tag.work { background:#16381f; color:#7dd6a0; }
+  .tag.err { background:#43181a; color:#ff9f9f; }
+  a { color:#ffb877; }
+  #result { display:none; }
+  #result.show { display:block; }
+  pre, .post { white-space:pre-wrap; background:#0e281c; border-radius:8px; padding:14px; font-size:14px; line-height:1.55; }
+  #cardwrap svg { width:100%; max-width:380px; height:auto; border-radius:8px; }
+  .meta { color:#9db8a8; font-size:12px; margin-top:10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Agent<em>Mesh</em></h1>
+  <div class="sub">One orchestrator hires five specialist AI agents — every hire is a real x402 stablecoin payment settled on Celo mainnet. Tag: <span id="tag"></span> · payTo: <span id="payto"></span></div>
+</header>
+<main>
+  <section class="panel">
+    <h2>Start a job</h2>
+    <form id="jobform">
+      <input type="text" id="topic" placeholder="e.g. How stablecoins protect savings from inflation" required>
+      <button id="go" type="submit">Hire agents</button>
+    </form>
+    <h2 style="margin-top:24px">Live payment feed</h2>
+    <ul id="feed"></ul>
+  </section>
+  <section class="panel" id="result">
+    <h2>Finished content</h2>
+    <div id="cardwrap"></div>
+    <h3>English</h3><div class="post" id="english"></div>
+    <h3>Nigerian Pidgin</h3><div class="post" id="pidgin"></div>
+    <div class="meta" id="meta"></div>
+  </section>
+</main>
+<script>
+const feed = document.getElementById('feed');
+function row(html, cls) {
+  const li = document.createElement('li');
+  li.innerHTML = html;
+  feed.prepend(li);
+}
+const fmt = (iso) => new Date(iso).toLocaleTimeString();
+fetch('/api/info').then(r=>r.json()).then(i=>{
+  document.getElementById('tag').textContent = i.attributionTag;
+  document.getElementById('payto').textContent = i.payTo.slice(0,10)+'…';
+});
+const es = new EventSource('/api/stream');
+es.onmessage = (m) => {
+  const e = JSON.parse(m.data);
+  const t = `<span class="t">${fmt(e.at)}</span>`;
+  if (e.type === 'job_start') row(`${t}<span class="tag work">JOB</span> "${e.topic}"`);
+  else if (e.type === 'hiring') row(`${t}<span class="tag work">HIRE</span> ${e.worker} agent`);
+  else if (e.type === 'payment') {
+    const link = e.tx ? ` — <a target="_blank" href="https://celoscan.io/tx/${e.tx}">view on Celoscan</a>` : '';
+    row(`${t}<span class="tag pay">PAID</span> ${e.worker}${link}`);
+  }
+  else if (e.type === 'done') row(`${t}<span class="tag work">DONE</span> ${e.worker} (${e.seconds.toFixed(1)}s)`);
+  else if (e.type === 'job_error') row(`${t}<span class="tag err">ERROR</span> ${e.error}`);
+  else if (e.type === 'job_complete') { row(`${t}<span class="tag pay">SETTLED</span> ${e.payments} x402 payments`); document.getElementById('go').disabled = false; }
+  else if (e.type === 'result') {
+    document.getElementById('result').classList.add('show');
+    document.getElementById('cardwrap').innerHTML = e.svg;
+    document.getElementById('english').textContent = e.english;
+    document.getElementById('pidgin').textContent = e.pidgin;
+    document.getElementById('meta').textContent = `fact-check: ${e.factcheck.verdict} · sources: ${e.sources.join('  ')}`;
+  }
+};
+document.getElementById('jobform').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const topic = document.getElementById('topic').value.trim();
+  if (!topic) return;
+  document.getElementById('go').disabled = true;
+  const r = await fetch('/api/jobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ topic }) });
+  if (!r.ok) { document.getElementById('go').disabled = false; }
+});
+</script>
+</body>
+</html>
