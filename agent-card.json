@@ -1,0 +1,33 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "AgentMesh Orchestrator",
+  "description": "Orchestrator of AgentMesh: a network of five x402-paywalled specialist AI worker agents (research, copywriting, fact-check, English→Nigerian Pidgin translation, image cards) that it hires and pays per task in USDC on Celo mainnet to produce Web3 education content for ChainConnect NG, a community in Port Harcourt, Nigeria.",
+  "image": "https://raw.githubusercontent.com/plutodev1/agentmesh/main/docs/agentmesh-logo.svg",
+  "onAigora": true,
+  "endpoints": [
+    {
+      "name": "wallet",
+      "endpoint": "eip155:42220:0xBc27C1B1D5317193301d63B563e51B2288753666",
+      "description": "Orchestrator paying wallet (x402 payments to worker agents)"
+    },
+    {
+      "name": "payTo",
+      "endpoint": "eip155:42220:0xA45EF0fA6167CDBB16A4A9F5cc4ab190017643D4",
+      "description": "Worker earnings wallet (x402 settlements land here)"
+    },
+    {
+      "name": "source",
+      "endpoint": "https://github.com/plutodev1/agentmesh",
+      "description": "Public source code"
+    }
+  ],
+  "capabilities": [
+    "x402-payments",
+    "content-research",
+    "copywriting",
+    "fact-checking",
+    "translation-en-pcm",
+    "svg-image-generation"
+  ],
+  "supportedTrust": ["reputation"]
+}

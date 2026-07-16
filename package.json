@@ -8,7 +8,9 @@
     "worker:research": "node src/workers/research.js",
     "orchestrate": "node src/orchestrator/index.js",
     "workers": "node src/workers/all.js",
-    "dashboard": "node src/dashboard/server.js"
+    "dashboard": "node src/dashboard/server.js",
+    "daily": "node src/scheduler/daily.js",
+    "register-8004": "node src/scripts/register-8004.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,8 @@
   "homepage": "https://github.com/plutodev1/agentmesh#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
+    "@celo/attribution-tags": "^0.3.0",
+    "@chaoschain/sdk": "^0.3.3",
     "@x402/core": "^2.18.0",
     "@x402/evm": "^2.18.0",
     "@x402/express": "^2.18.0",
